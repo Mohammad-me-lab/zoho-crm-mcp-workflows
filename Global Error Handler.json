@@ -1,0 +1,79 @@
+{
+  "name": "Global Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "680b28db-fd1a-4efe-8f64-c2e4f737b797",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $json.error || {};\nconst execution = $json.execution || {};\nconst workflow = $json.workflow || {};\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    status: 'failed',\n    workflow_name: workflow.name || 'unknown',\n    workflow_id: workflow.id || 'unknown',\n    execution_id: execution.id || 'unknown',\n    mode: execution.mode || 'unknown',\n    failed_node: error.node?.name || error.node || execution.lastNodeExecuted || 'unknown',\n    error_message: error.message || 'Unknown error',\n    error_name: error.name || 'Error',\n    error_stack: error.stack || null,\n    retry_of: execution.retryOf || null,\n    last_node_executed: execution.lastNodeExecuted || null\n  }\n}];"
+      },
+      "id": "07c4621d-f0b7-4852-bd92-1720833b9919",
+      "name": "Format Error Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "={{ '/tmp/n8n-errors/' + ($json.execution_id || 'unknown') + '.json' }}",
+        "options": {}
+      },
+      "id": "d0c00ab4-28db-4744-ae1b-78e61918ea2a",
+      "name": "Save Error Log",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        192
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a7f35db2-a647-4d19-92dc-eadb9865712f",
+      "name": "Error Notification",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        416
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f2c4fcdb-fa30-46cf-bf6b-77645467835e",
+  "meta": {
+    "instanceId": "6e4adc7fb67d25c85c96247644f1e4e83dcebe02d966c78b53795cc87cfea084"
+  },
+  "id": "fXPxJJHXvde78TiO",
+  "tags": []
+}

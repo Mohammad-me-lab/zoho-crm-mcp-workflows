@@ -1,0 +1,187 @@
+{
+  "name": "Zoho CRM MCP Server",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "zoho-crm-mcp"
+      },
+      "id": "f5dd61ff-13d2-4c27-b36d-987f7f0b1824",
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        912,
+        144
+      ],
+      "webhookId": "6b6b823c-c763-49d9-b55a-321128140df4",
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "Company": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Company', ``, 'string') }}",
+        "lastName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Last_Name', ``, 'string') }}",
+        "additionalFields": {
+          "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+          "First_Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('First_Name', ``, 'string') }}",
+          "Lead_Source": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_Source', ``, 'string') }}",
+          "Lead_Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_Status', ``, 'string') }}",
+          "Mobile": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Mobile', ``, 'string') }}",
+          "Website": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Website', ``, 'string') }}"
+        }
+      },
+      "id": "af3a9c7e-f64d-4bf3-8ebe-3f5a57f9a312",
+      "name": "Create a lead in Zoho CRM",
+      "type": "n8n-nodes-base.zohoCrmTool",
+      "typeVersion": 1,
+      "position": [
+        720,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "update",
+        "leadId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_ID', ``, 'string') }}",
+        "updateFields": {
+          "Company": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Company', ``, 'string') }}",
+          "Description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "First_Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('First_Name', ``, 'string') }}",
+          "Last_Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Last_Name', ``, 'string') }}",
+          "Lead_Source": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_Source', ``, 'string') }}",
+          "Lead_Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_Status', ``, 'string') }}"
+        }
+      },
+      "id": "bfc877fa-b7cf-448e-8c01-618242857c5b",
+      "name": "Update a lead in Zoho CRM",
+      "type": "n8n-nodes-base.zohoCrmTool",
+      "typeVersion": 1,
+      "position": [
+        848,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "get",
+        "leadId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_ID', ``, 'string') }}"
+      },
+      "id": "5a26202c-f860-4b57-b787-d4410378ed2f",
+      "name": "Get a lead in Zoho CRM",
+      "type": "n8n-nodes-base.zohoCrmTool",
+      "typeVersion": 1,
+      "position": [
+        976,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "05e9f1ee-03ed-4e4f-a35c-6ff2a5e41c6a",
+      "name": "Get All leads in Zoho CRM",
+      "type": "n8n-nodes-base.zohoCrmTool",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "delete",
+        "leadId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Lead_ID', ``, 'string') }}"
+      },
+      "id": "92a1f1ba-174c-463a-a63b-9fed8ec31232",
+      "name": "Delete a lead in Zoho CRM",
+      "type": "n8n-nodes-base.zohoCrmTool",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        368
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create a lead in Zoho CRM": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a lead in Zoho CRM": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a lead in Zoho CRM": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All leads in Zoho CRM": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a lead in Zoho CRM": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "fXPxJJHXvde78TiO",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "6392792c-c58a-4811-ae1b-ffcbd5d2956e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e4adc7fb67d25c85c96247644f1e4e83dcebe02d966c78b53795cc87cfea084"
+  },
+  "id": "tS7Qzbnkq3Oi1YIu",
+  "tags": []
+}
