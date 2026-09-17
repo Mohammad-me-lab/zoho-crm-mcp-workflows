@@ -17,6 +17,7 @@
     },
     {
       "parameters": {
+        "hasOutputParser": true,
         "options": {
           "systemMessage": "You are an AI assistant that helps manage leads in Zoho CRM.\nUse the available MCP tools for Zoho CRM operations.\nWhen the user asks to create, update, get, list, or delete a lead, use the appropriate tool.\nBefore destructive actions such as deleting a lead, ask for confirmation if the user's intent is ambiguous.\nProvide concise natural-language confirmations and report tool errors clearly."
         }
@@ -26,7 +27,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        240,
+        296,
         -16
       ]
     },
@@ -77,6 +78,20 @@
         432,
         208
       ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"lead\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"fullName\": {\n          \"type\": \"string\",\n          \"description\": \"Customer's Full Name\"\n        },\n        \"company\": {\n          \"type\": \"string\",\n          \"description\": \"Company name\"\n        },\n        \"email\": {\n          \"type\": \"string\",\n          \"format\": \"email\",\n          \"pattern\": \"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\"\n        },\n        \"phone\": {\n          \"type\": \"string\",\n          \"pattern\": \"^09\\\\d{9}$\"\n        },\n        \"leadSource\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"Website\",\n            \"Referral\",\n            \"Cold Call\",\n            \"Email Campaign\",\n            \"Other\"\n          ],\n          \"description\": \"Lead source\"\n        },\n        \"message_summary_en\": {\n          \"type\": \"string\",\n          \"description\": \"English summary of the customer's message\"\n        }\n      },\n      \"required\": [\n        \"fullName\",\n        \"email\",\n        \"phone\",\n        \"message_summary_en\"\n      ]\n    },\n    \"followUpTask\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"taskType\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"call\",\n            \"email\"\n          ]\n        },\n        \"dueInDays\": {\n          \"type\": \"integer\"\n        },\n        \"notes\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"taskType\",\n        \"dueInDays\",\n        \"notes\"\n      ]\n    },\n    \"validity\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"is_valid\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is the lead valid in terms of required fields?\"\n        },\n        \"reasons\": {\n          \"type\": \"string\",\n          \"description\": \"The reason for a lead being valid or invalid\"\n        }\n      },\n      \"required\": [\n        \"is_valid\",\n        \"reasons\"\n      ]\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of missing fields in the message – email and phone number are mandatory.\"\n    },\n    \"scoring\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"lead_score\": {\n          \"type\": \"integer\",\n          \"minimum\": 0,\n          \"maximum\": 100\n        },\n        \"lead_quality\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"very_low\",\n            \"low\",\n            \"medium\",\n            \"high\",\n            \"very_high\"\n          ]\n        }\n      },\n      \"required\": [\n        \"lead_score\",\n        \"lead_quality\"\n      ]\n    }\n  },\n  \"required\": [\n    \"lead\",\n    \"followUpTask\",\n    \"validity\",\n    \"missing_fields\",\n    \"scoring\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        208
+      ],
+      "id": "b4ab8878-cb4c-4200-8b21-fea3f24d4a9a",
+      "name": "Structured Output Parser"
     }
   ],
   "pinData": {},
@@ -124,6 +139,17 @@
           }
         ]
       ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -131,7 +157,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "ba37c1fe-9184-4af3-a489-7938b858446c",
+  "versionId": "2202da0e-79d5-469c-af41-a976e34c739d",
   "meta": {
     "instanceId": "6e4adc7fb67d25c85c96247644f1e4e83dcebe02d966c78b53795cc87cfea084"
   },
