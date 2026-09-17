@@ -1,318 +1,386 @@
 # Zoho CRM MCP Workflows
 
-An n8n-based integration that connects an AI Agent to **Zoho CRM through the Model Context Protocol (MCP)**.
+An n8n-based AI workflow for managing Zoho CRM leads through an MCP server and an AI agent.
 
-The project separates the system into three independent workflows: the **Zoho CRM Agent**, **Zoho CRM MCP Server**, and a **Global Error Handler**.
+The system allows users to create, update, retrieve, list, and delete Zoho CRM leads using natural-language requests. The AI agent also extracts structured lead information, validates required fields, generates follow-up tasks, and assigns an initial lead score.
 
-This architecture keeps the AI Agent, CRM tools, and error handling separated, making the system easier to maintain, extend, and reuse.
+---
 
 ## Architecture
 
-```text
-┌───────────────────────────────┐
-│ Zoho CRM MCP Server           │
-│                               │
-│ MCP Server Trigger            │
-│       ↓                       │
-│ Zoho CRM Tools                │
-└───────────────┬───────────────┘
-                │ MCP
-                │
-┌───────────────▼───────────────┐
-│ Zoho CRM Agent                │
-│                               │
-│ Chat Trigger                  │
-│       ↓                       │
-│ AI Agent                      │
-│       ↓                       │
-│ MCP Client                    │
-└───────────────────────────────┘
-
-
-┌───────────────────────────────┐
-│ Global Error Handler          │
-│                               │
-│ Error Trigger                 │
-│       ↓                       │
-│ Format Error                  │
-│       ↓                       │
-│ Log / Notification            │
-└───────────────────────────────┘
-```
-
-Each workflow has a dedicated responsibility:
-
-* **Zoho CRM Agent** — handles user interaction and communicates with the MCP Server.
-* **Zoho CRM MCP Server** — exposes Zoho CRM operations as MCP tools.
-* **Global Error Handler** — centrally handles errors from the n8n workflows.
-
-## How It Works
-
-A typical request flows through the system like this:
+The workflow currently contains three main responsibilities:
 
 ```text
 User
-  │
-  │ "Create a lead for John Smith"
-  ▼
+ │
+ ▼
 Chat Trigger
-  │
-  ▼
+ │
+ ▼
 AI Agent
+ │
+ ├── OpenAI Chat Model
+ ├── Simple Memory
+ └── MCP Client
+          │
+          │ MCP
+          ▼
+   MCP Server Trigger
+          │
+          ├── Create Lead
+          ├── Update Lead
+          ├── Get Lead
+          ├── Get All Leads
+          └── Delete Lead
+                  │
+                  ▼
+              Zoho CRM
+
+
+Errors
   │
   ▼
-MCP Client
-  │
-  │ MCP
-  ▼
-Zoho CRM MCP Server
+Error Trigger
   │
   ▼
-Zoho CRM Tool
+Format Error Log
   │
   ▼
-Zoho CRM
+Save Error Log
 ```
 
-The AI Agent does not directly interact with Zoho CRM.
+---
 
-Instead, it communicates with the **Zoho CRM MCP Server** through the MCP Client. The MCP Server exposes the required CRM operations as tools.
+## Features
 
-This creates a clear separation between the AI layer and the CRM integration layer.
+- Create leads in Zoho CRM
+- Update existing leads
+- Retrieve a specific lead
+- Retrieve all leads
+- Delete leads
+- Natural-language interaction through an AI Agent
+- MCP-based communication between the AI Agent and Zoho CRM tools
+- Conversation memory using Simple Memory
+- Structured lead extraction and validation
+- Required-field detection
+- Follow-up task generation
+- Initial lead scoring
+- Centralized error logging
 
-## Workflows
+---
 
-### Zoho CRM Agent
+## Zoho CRM MCP Server
 
-The **Zoho CRM Agent** workflow provides the user-facing AI interface.
+The MCP Server exposes Zoho CRM operations as tools that can be used by an MCP client.
 
-Main components include:
+Available tools:
 
-* Chat Trigger
-* AI Agent
-* OpenAI Chat Model
-* Simple Memory
-* MCP Client
+| Tool | Description |
+|---|---|
+| Create a lead | Creates a new lead in Zoho CRM |
+| Update a lead | Updates an existing lead |
+| Get a lead | Retrieves a specific lead |
+| Get All leads | Retrieves all available leads |
+| Delete a lead | Deletes a lead |
 
-The agent receives the user's request, determines the required CRM operation, and calls the appropriate MCP tool.
-
-Example:
+The MCP server is exposed through the following local endpoint:
 
 ```text
-User
- ↓
-AI Agent
- ↓
-MCP Client
- ↓
-Zoho CRM MCP Server
- ↓
-Zoho CRM Tool
- ↓
-Zoho CRM
+http://localhost:5678/mcp/zoho-crm-mcp
 ```
 
 ---
 
-### Zoho CRM MCP Server
+## AI Agent
 
-The **Zoho CRM MCP Server** workflow exposes Zoho CRM functionality through MCP.
+The AI Agent receives natural-language requests and decides which Zoho CRM operation should be performed.
 
-CRM operations are provided as tools that can be discovered and called by an MCP client.
+For example:
 
-Depending on the configured tools, operations can include:
+```text
+Create a lead for John Smith from ABC Company.
+His email is john@example.com and his phone is 09123456789.
+```
 
-* Create Lead
-* Update Lead
-* Get Lead
-* Get All Leads
-* Delete Lead
+The agent can extract the relevant information and use the appropriate MCP tool to interact with Zoho CRM.
 
-The MCP Server is independent from the AI Agent, allowing the CRM tools to potentially be reused by other MCP-compatible clients.
+The agent is configured with:
+
+- OpenAI Chat Model
+- Simple Memory
+- MCP Client Tool
+- Structured Output Parser
+
+The conversation memory uses the session ID when available.
 
 ---
 
-### Global Error Handler
+## Structured Output
 
-The **Global Error Handler** provides centralized error handling for the n8n workflows.
+The AI Agent uses a Structured Output Parser to produce a predictable JSON structure.
 
-It starts with an **Error Trigger**, formats the error information, and can then log the error or send a notification.
+The output contains five main sections:
+
+```json
+{
+  "lead": {},
+  "followUpTask": {},
+  "validity": {},
+  "missing_fields": [],
+  "scoring": {}
+}
+```
+
+### Lead
+
+Contains the extracted customer information:
+
+```json
+{
+  "fullName": "John Smith",
+  "company": "ABC Company",
+  "email": "john@example.com",
+  "phone": "09123456789",
+  "leadSource": "Website",
+  "message_summary_en": "Customer is interested in the company's services."
+}
+```
+
+The required lead fields are:
+
+- `fullName`
+- `email`
+- `phone`
+- `message_summary_en`
+
+Email and phone are validated using the configured schema.
+
+### Follow-up Task
+
+The agent generates a suggested follow-up task:
+
+```json
+{
+  "taskType": "call",
+  "dueInDays": 2,
+  "notes": "Contact the customer to discuss their requirements."
+}
+```
+
+Supported task types:
+
+```text
+call
+email
+```
+
+### Validity
+
+The agent determines whether the required information is available:
+
+```json
+{
+  "is_valid": true,
+  "reasons": "All required lead fields are available."
+}
+```
+
+### Missing Fields
+
+Missing required information is returned as an array:
+
+```json
+{
+  "missing_fields": [
+    "email",
+    "phone"
+  ]
+}
+```
+
+### Lead Scoring
+
+The agent also generates an initial lead score:
+
+```json
+{
+  "lead_score": 80,
+  "lead_quality": "high"
+}
+```
+
+The score ranges from `0` to `100`.
+
+Supported quality levels:
+
+```text
+very_low
+low
+medium
+high
+very_high
+```
+
+---
+
+## Error Handling
+
+The workflow includes an error-handling flow:
 
 ```text
 Error Trigger
-      ↓
-Format Error
-      ↓
-Log / Notification
+     │
+     ▼
+Format Error Log
+     │
+     ▼
+Save Error Log
+     │
+     ▼
+Error Notification
 ```
 
-The handler can capture information such as:
+The error log records information such as:
 
-* Workflow name
-* Execution ID
-* Failed node
-* Error message
-* Timestamp
+- Timestamp
+- Workflow name and ID
+- Execution ID
+- Execution mode
+- Failed node
+- Error message
+- Error name
+- Error stack
+- Retry information
+- Last executed node
 
-Centralizing error handling avoids duplicating error-processing logic across individual workflows.
-
-## Key Features
-
-* Zoho CRM integration through MCP
-* AI Agent with MCP Client
-* Dedicated Zoho CRM MCP Server
-* Global error handling
-* Modular n8n architecture
-* Reusable CRM tools
-* Natural-language CRM interaction
-* Conversation memory
-* Separation of AI and CRM responsibilities
-
-## Why MCP?
-
-A direct integration could connect the AI Agent directly to Zoho CRM:
+Error logs are currently written to:
 
 ```text
-AI Agent ──────────► Zoho CRM
+/tmp/n8n-errors/
 ```
 
-This project instead introduces an MCP layer:
+---
 
-```text
-AI Agent
-   │
-   ▼
-MCP Client
-   │
-   ▼
-MCP Server
-   │
-   ▼
-Zoho CRM
-```
+## Requirements
 
-This separation makes the CRM capabilities independent from the AI application using them.
+- n8n
+- Zoho CRM account
+- Zoho CRM credentials configured in n8n
+- OpenAI credentials configured in n8n
+- An OpenAI chat model
+- MCP Server and MCP Client support in n8n
 
-The same MCP Server can potentially be consumed by different MCP-compatible clients without changing the underlying CRM integration.
-
-## Design Principles
-
-### Separation of Concerns
-
-Each workflow has a specific responsibility:
-
-| Workflow             | Responsibility                                |
-| -------------------- | --------------------------------------------- |
-| Zoho CRM Agent       | User interaction and AI-driven tool selection |
-| Zoho CRM MCP Server  | Exposes Zoho CRM capabilities as MCP tools    |
-| Global Error Handler | Centralized workflow error handling           |
-
-### Reusability
-
-The MCP Server is not tightly coupled to the AI Agent.
-
-The CRM tools can potentially be reused by other MCP-compatible applications.
-
-### Maintainability
-
-Separating the workflows makes it easier to extend or modify individual components without redesigning the entire system.
-
-For example, new Zoho CRM tools can be added to the MCP Server without changing the AI Agent architecture.
-
-## Tech Stack
-
-* **n8n** — Workflow automation
-* **Model Context Protocol (MCP)** — Tool integration layer
-* **OpenAI** — AI model
-* **Zoho CRM** — CRM backend
-* **MCP Client / Server** — Communication between the AI Agent and CRM tools
-
-## Project Structure
-
-```text
-zoho-crm-mcp-workflows/
-│
-├── Zoho CRM Agent.json
-├── Zoho CRM MCP Server.json
-├── Global Error Handler.json
-│
-├── README.md
-└── LICENSE
-```
+---
 
 ## Setup
 
-### 1. Run n8n
+### 1. Import the workflow
 
-Install or run n8n using your preferred setup.
+Import the workflow JSON file into n8n.
 
-### 2. Import the Workflows
+### 2. Configure Zoho CRM credentials
 
-Import the three workflow files into n8n:
+Configure the Zoho CRM credentials used by the Zoho CRM tool nodes.
 
-* `Zoho CRM Agent`
-* `Zoho CRM MCP Server`
-* `Global Error Handler`
+### 3. Configure OpenAI credentials
 
-### 3. Configure Credentials
+Configure the OpenAI credentials used by the AI Agent's chat model.
 
-Configure the required credentials for:
+### 4. Verify the MCP endpoint
 
-* OpenAI
-* Zoho CRM
-
-### 4. Configure the MCP Connection
-
-Configure the MCP Client in the **Zoho CRM Agent** workflow to connect to the **Zoho CRM MCP Server**.
-
-### 5. Configure the Global Error Handler
-
-Configure the **Global Error Handler** according to the desired logging or notification mechanism.
-
-### 6. Activate the Workflows
-
-Activate the required workflows and start interacting with the AI Agent through the Chat Trigger.
-
-## Example
-
-A user can interact with the system using natural language:
+The MCP Server uses:
 
 ```text
-User:
-Create a new lead for John Smith from Example Corp.
+http://localhost:5678/mcp/zoho-crm-mcp
 ```
 
-The request is processed through:
+Make sure the n8n instance is running and the MCP endpoint is accessible.
+
+### 5. Configure the MCP Client
+
+The MCP Client connects to the MCP Server using the endpoint above.
+
+### 6. Configure Error Workflow
+
+The workflow containing the `Error Trigger` should be configured as the Error Workflow for the workflows that need centralized error handling.
+
+---
+
+## Example Requests
+
+### Create a lead
 
 ```text
-User
- ↓
-Zoho CRM Agent
- ↓
-MCP Client
- ↓
-Zoho CRM MCP Server
- ↓
-Create Lead Tool
- ↓
-Zoho CRM
+Create a lead for Ali Ahmadi from ABC Company.
+His email is ali@example.com and his phone is 09123456789.
 ```
 
-The user does not need to know which CRM API endpoint or operation is required. The AI Agent selects and invokes the appropriate MCP tool.
+### Get a lead
+
+```text
+Get the lead with ID 123456789.
+```
+
+### Update a lead
+
+```text
+Update lead 123456789 and change the company to XYZ Company.
+```
+
+### List leads
+
+```text
+Show me all leads in Zoho CRM.
+```
+
+### Delete a lead
+
+```text
+Delete lead 123456789.
+```
+
+The agent should handle destructive operations carefully and request confirmation when the user's intent is ambiguous.
+
+---
+
+## Workflow Structure
+
+The current n8n workflow contains:
+
+```text
+Zoho-CRM-MCP-Workflows
+│
+├── MCP Server Trigger
+│   ├── Create a lead in Zoho CRM
+│   ├── Update a lead in Zoho CRM
+│   ├── Get a lead in Zoho CRM
+│   ├── Get All leads in Zoho CRM
+│   └── Delete a lead in Zoho CRM
+│
+├── When chat message received
+│   └── AI Agent
+│       ├── OpenAI Chat Model
+│       ├── Simple Memory
+│       ├── MCP Client
+│       └── Structured Output Parser
+│
+└── Error Handling
+    ├── Error Trigger
+    ├── Format Error Log
+    ├── Save Error Log
+    └── Error Notification
+```
+
+---
 
 ## Future Improvements
 
-Possible extensions include:
+Possible improvements include:
 
-* Adding more Zoho CRM modules
-* Adding additional CRM tools
-* Improving structured error reporting
-* Adding persistent logging
-* Adding monitoring and observability
-* Adding authentication and access control
-* Connecting additional MCP-compatible clients
-* Adding automated workflow testing
-
-## License
-
-This project is available under the MIT License.
+- Separate the MCP Server, AI Agent, and Error Handler into independent workflows
+- Add more Zoho CRM modules and operations
+- Add stronger lead validation
+- Connect lead scoring to explicit business rules or a trained model
+- Add persistent logging and monitoring
+- Add notifications for workflow failures
+- Add automated tests for MCP tools and structured outputs
